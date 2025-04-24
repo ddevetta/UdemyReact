@@ -37,7 +37,7 @@ namespace UdemyReact.Controllers
         /// <summary>
         /// HTTP - GET {id}        
         /// Gets a single Place object.
-        /// Returns a Place object matching the user/PlaceId supplied (completed by Include-ing the Image object)
+        /// Returns a Place object matching the PlaceId supplied (completed by Include-ing the Image object)
         /// Returns 404 - NotFound - if no Place exists for the supplied id
         /// </summary>
         /// <returns>Place</returns>
@@ -56,8 +56,8 @@ namespace UdemyReact.Controllers
         /// HTTP - POST       
         /// Creates one or more Place records. 
         /// The request body chould consist of an array of Place items, even if only one is being added.
-        /// Returns 201 - created - and the Place object created (completed by Include-ing the Image object)
-        /// Returns 500 - Error - if a Place record already exists with the given id - the body will contain the stack trace of the primary key violation returned by the database.
+        /// Returns 201 - Created - and a message in the body indicating how many Places were added.
+        /// Returns 422 - Error - if a Place record already exists with the given id, or any other DB exception (the body will contain the DB error of the primary key violation/exception returned by the database).
         /// </summary>
         /// <returns>Message giving number of Place items added</returns>
         [HttpPost]
@@ -72,10 +72,11 @@ namespace UdemyReact.Controllers
         /// HTTP - PUT      
         /// Creates one or more Place records. 
         /// The request body chould consist of an array of Place items, even if only one is being added.
-        /// Returns 201 - created - and the Place object created (completed by Include-ing the Image object)
-        /// Returns 500 - Error - if a Place record already exists with the given id - the body will contain the stack trace of the primary key violation returned by the database.
+        /// Returns 204 - NoContent - and the Place object created (completed by Include-ing the Image object)
+        /// Returns 404 - NotFound - if the PlaceId does not exist
+        /// Returns 422 - Error - if a Database exception was raised (the body will contain the exception returned by the datase)
         /// </summary>
-        /// <returns>Message giving number of Place items added</returns>
+        /// <returns></returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPlace(string id, [FromBody] Place newPlace)
         {
@@ -99,8 +100,9 @@ namespace UdemyReact.Controllers
         /// <summary>
         /// HTTP - DELETE      
         /// Deletes a Place record and it's associated Image record. 
-        /// Returns 204 - NoAction - if successful.
+        /// Returns 204 - NoContent - if successful.
         /// Returns 404 - NotFound - if the PlaceId does not exist
+        /// Returns 422 - Error - if a Database exception was raised (the body will contain the exception returned by the datase)
         /// </summary>
         /// <returns></returns>
         [HttpDelete("{id}")]
@@ -119,7 +121,13 @@ namespace UdemyReact.Controllers
             return await this.SaveChangesAsync("Error Deleting Place", NoContent());
         }
 
-
+        /// <summary>
+        /// Tries the SaveChanges asynchronously.
+        /// Returns either UnprocessableEntity if a DB Exception was caught, else returns the 'successAction' passed to it.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="successAction">The IActionResult action to return if no exception caught.</param>
+        /// <returns>IActionResult</returns>
         private async Task<IActionResult> SaveChangesAsync(string message, IActionResult successAction)
         {
             try
