@@ -12,6 +12,11 @@ namespace UdemyReact.Controllers
     [ApiController]
     public class UserPlaceController : ControllerBase
     {
+        private class UserPlacesWrapper
+        {
+            public IEnumerable<UserPlaces> places { get; set; }
+        }
+
         private readonly PlaceDbContext _context;
         private readonly ILogger<UserPlaceController> _logger;
 
@@ -24,14 +29,21 @@ namespace UdemyReact.Controllers
         /// <summary>
         /// HTTP - GET         
         /// Gets all UserPlaces. 
-        /// Returns an array of all UserPlace objects (completed by Include-ing the Place object and then Include Image object)
+        /// Returns an array of all UserPlace objects joined with the Place object and then Include Image object)
         /// Returns an empty array if no UserPlaces exist
         /// </summary>
         /// <returns>[UserPlace]</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserPlace>>> GetPlaces()
         {
-            return await _context.UserPlace.Include(u => u.Place).ThenInclude(p => p.Image).ToListAsync();
+            UserPlacesWrapper w = new UserPlacesWrapper();
+            //w.places = await _context.UserPlace.Include(u => u.Place).ThenInclude(p => p.Image).ToListAsync();
+            w.places = await _context.UserPlace
+                .Join(_context.Place, 
+                      u => u.PlaceId, p => p.Id,
+                     (u, p) => new UserPlaces { UserId = u.UserId, Id = p.Id, Title = p.Title, Image = p.Image, Lat = p.Lat, Lon = p.Lon })
+                .ToListAsync();
+            return Ok(w);
         }
 
         /// <summary>
@@ -42,9 +54,16 @@ namespace UdemyReact.Controllers
         /// </summary>
         /// <returns>[UserPlace]</returns>
         [HttpGet("{user}")]
-        public async Task<ActionResult<IEnumerable<UserPlace>>> GetUserPlaces(string user)
+        public async Task<ActionResult<IEnumerable<UserPlaces>>> GetUserPlaces(string user)
         {
-            return await _context.UserPlace.Include(u => u.Place).ThenInclude(p => p.Image).Where(u => u.UserId == user).ToListAsync();
+            UserPlacesWrapper w = new UserPlacesWrapper();
+            w.places = await _context.UserPlace
+                .Join(_context.Place, 
+                      u => u.PlaceId, p => p.Id, 
+                     (u,  p) => new UserPlaces { UserId = u.UserId, Id = p.Id, Title = p.Title, Image = p.Image, Lat = p.Lat, Lon = p.Lon })
+                .Where(up => up.UserId == user)
+                .ToListAsync();
+            return Ok(w);
         }
 
         /// <summary>

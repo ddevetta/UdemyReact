@@ -12,6 +12,11 @@ namespace UdemyReact.Controllers
     [ApiController]
     public class PlaceController : ControllerBase
     {
+        private class PlacesWrapper
+        {
+            public IEnumerable<Place> places { get; set; }
+        }
+
         private readonly PlaceDbContext _context;
         private readonly ILogger<PlaceController> _logger;
 
@@ -31,7 +36,9 @@ namespace UdemyReact.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Place>>> GetPlaces()
         {
-            return await _context.Place.Include(p => p.Image).ToListAsync();
+            PlacesWrapper p = new PlacesWrapper();
+            p.places = await _context.Place.Include(p => p.Image).ToListAsync();
+            return Ok(p);
         }
 
         /// <summary>

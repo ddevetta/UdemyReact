@@ -40,9 +40,12 @@ builder.Services.AddCors(options =>
 // Set up connection string to Ora (defined in appsettings)
 builder.Services.AddDbContext<PlaceDbContext>(options => 
 { 
-    options.UseOracle(builder.Configuration.GetConnectionString("OracleDb"))
+    options.UseOracle(builder.Configuration.GetConnectionString("OracleDb")) //Environment.GetEnvironmentVariable("ASPNETCORE_ConnectionStrings:OracleDb"))
            .ReplaceService<ISqlGenerationHelper, OracleSqlGenerationCasingHelper>(); 
 });
+
+// Allow env variables overrides
+builder.Configuration.AddEnvironmentVariables();
 
 var app = builder.Build();
 

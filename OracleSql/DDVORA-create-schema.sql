@@ -37,7 +37,7 @@ AS
     SELECT up.UserId, p.Id, p.Title, i.Src, i.Alt, p.Lat, p.Lon
     FROM DDV.userplace up, DDV.place p, DDV.image i
     WHERE up.placeid = p.id
-    AND p.id = i.id(+)
+    AND   up.placeid = i.id
 );
 
 CREATE OR REPLACE VIEW Places

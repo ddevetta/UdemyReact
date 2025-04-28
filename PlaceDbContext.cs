@@ -22,9 +22,10 @@ namespace UdemyReact
         [JsonPropertyName("places")]
         public DbSet<Place> Place { get; set; }
 
+        [JsonPropertyName("images")]
         public DbSet<Image> Image { get; set; }
 
-        [JsonPropertyName("places")]
+        [JsonPropertyName("userplaces")]
         public DbSet<UserPlace> UserPlace { get; set; }
 
 
