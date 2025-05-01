@@ -73,19 +73,23 @@ namespace UdemyReact.Controllers
         /// Returns 404 - NotFound - if no UserPlace exists for the supplied user/id
         /// </summary>
         /// <returns>UserPlace</returns>
-        [HttpGet("{user}, {id}")]
-        public async Task<ActionResult<UserPlace>> GetPlace(string user, string id)
+        [HttpGet("{user}/{id}")]
+        public async Task<ActionResult<UserPlaces>> GetPlace(string user, string id)
         {
-            var place = await _context.UserPlace.Include(u => u.Place).ThenInclude(p => p.Image).FirstOrDefaultAsync(u => u.UserId == user && u.PlaceId == id);
+            UserPlaces? up = await _context.UserPlace //.Include(u => u.Place).ThenInclude(p => p.Image).FirstOrDefaultAsync(u => u.UserId == user && u.PlaceId == id);
+                .Join(_context.Place,
+                      u => u.PlaceId, p => p.Id,
+                     (u, p) => new UserPlaces { UserId = u.UserId, Id = p.Id, Title = p.Title, Image = p.Image, Lat = p.Lat, Lon = p.Lon })
+                .FirstOrDefaultAsync(u => u.UserId == user && u.Id == id);
 
-            if (place == null)
-                return NotFound();
+            if (up == null)
+                return NotFound(new ResponseBody(HttpStatusCode.NotFound, "The Place does not exist for the User specified"));
 
-            return place;
+            return up;
         }
 
         /// <summary>
-        /// HTTP - POST       
+        /// HTTP - POST (?user=&id= in querystring)        
         /// Creates a UserPlace association record. 
         /// Returns 201 - created - and the UserPlace object created (completed by Include-ing the Place object and then Include Image object)
         /// Returns 400 - BadRequest - if the User/Place association already exists
@@ -97,11 +101,11 @@ namespace UdemyReact.Controllers
         {
             var userPlace = await _context.UserPlace.FirstOrDefaultAsync(u => u.UserId == user && u.PlaceId == id);
             if (userPlace != null)
-                return BadRequest(new { message = "UserPlace already exists" });
+                return BadRequest(new ResponseBody(HttpStatusCode.BadRequest, "The Place has already been selected"));
 
             var place = await _context.Place.Include(p => p.Image).FirstOrDefaultAsync(p => p.Id == id);
             if (place == null)
-                return NotFound(new { message = "Place not found with the supplied Id" });
+                return NotFound(new ResponseBody(HttpStatusCode.NotFound, "A Place does not exist with the supplied Id"));
 
             var newUP = new UserPlace(user, id, place);
             _context.UserPlace.Add(newUP);
@@ -111,18 +115,18 @@ namespace UdemyReact.Controllers
         }
 
         /// <summary>
-        /// HTTP - DELETE      
+        /// HTTP - DELETE (?user=&id= in querystring) 
         /// Deletes a UserPlace association record. 
-        /// Returns 204 - NoAction - if successful.
+        /// Returns 204 - NoContent - if successful.
         /// Returns 404 - NotFound - if the user/PlaceId does not exist
         /// </summary>
         /// <returns>[UserPlace]</returns>
-        [HttpDelete("{user}, {id}")]
+        [HttpDelete]
         public async Task<IActionResult> DeleteCustomer(string user, string id)
         {
             var place = await _context.UserPlace.FindAsync(user, id);
             if (place == null)
-                return NotFound();
+                return NotFound(new ResponseBody(HttpStatusCode.NotFound, "The Place does not exist for the User specified"));
 
             _context.UserPlace.Remove(place);
             await _context.SaveChangesAsync();

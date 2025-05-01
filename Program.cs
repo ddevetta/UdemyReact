@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using System;
+using System.Net;
 using System.Reflection.Emit;
 using UdemyReact;
 
@@ -32,7 +33,7 @@ builder.Services.AddCors(options =>
         {
             builder
             .AllowAnyOrigin()
-            .WithMethods("GET", "PUT") //   AllowAnyMethod()
+            .AllowAnyMethod()  //   WithMethods("GET", "PUT") 
             .AllowAnyHeader();
         });
 });
@@ -66,7 +67,7 @@ app.MapControllers();
 
 app.MapGet("ping", (HttpRequest req) =>
 {
-    return Results.Ok(new { message = "Hello World." });
+    return Results.Ok(new ResponseBody(HttpStatusCode.OK, "Hello World."));
 });
 
 app.Run();

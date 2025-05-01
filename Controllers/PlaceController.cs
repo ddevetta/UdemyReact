@@ -54,7 +54,7 @@ namespace UdemyReact.Controllers
             var place = await _context.Place.Include(p => p.Image).FirstOrDefaultAsync(p => p.Id == id);  //FindAsync(id);
 
             if (place == null)
-                return NotFound();
+                return NotFound(new ResponseBody(HttpStatusCode.NotFound, "A Place does not exist with the supplied Id"));
 
             return place;
         }
@@ -72,11 +72,11 @@ namespace UdemyReact.Controllers
         {
             _context.Place.AddRange(newPlace);
 
-            return await this.SaveChangesAsync("Error Adding Place(s)", CreatedAtAction(nameof(CreatePlace), new { message = $"{newPlace.Length} place(s) added." }));
+            return await this.SaveChangesAsync("Error Adding Place(s)", CreatedAtAction(nameof(CreatePlace), new ResponseBody(HttpStatusCode.Created, $"{newPlace.Length} place(s) added.")));
         }
 
         /// <summary>
-        /// HTTP - PUT      
+        /// HTTP - PUT (?id= in querystring) 
         /// Creates one or more Place records. 
         /// The request body chould consist of an array of Place items, even if only one is being added.
         /// Returns 204 - NoContent - and the Place object created (completed by Include-ing the Image object)
@@ -84,15 +84,15 @@ namespace UdemyReact.Controllers
         /// Returns 422 - Error - if a Database exception was raised (the body will contain the exception returned by the datase)
         /// </summary>
         /// <returns></returns>
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> PutPlace(string id, [FromBody] Place newPlace)
         {
             if (id != newPlace.Id)
-                return BadRequest(new { message = "ID mismatch." });
+                return BadRequest(new ResponseBody(HttpStatusCode.NotFound, "Id does not match the body contents"));
 
             var place = await _context.Place.FindAsync(id);
             if (place == null)
-                return NotFound(new { message = "Place not found with the supplied Id" });
+                return NotFound(new ResponseBody(HttpStatusCode.NotFound, "A Place does not exist with the supplied Id"));
 
             place.Title = newPlace.Title;
             place.Lat = newPlace.Lat;
@@ -105,19 +105,19 @@ namespace UdemyReact.Controllers
         }
 
         /// <summary>
-        /// HTTP - DELETE      
+        /// HTTP - DELETE (?id= in querystring)     
         /// Deletes a Place record and it's associated Image record. 
         /// Returns 204 - NoContent - if successful.
         /// Returns 404 - NotFound - if the PlaceId does not exist
         /// Returns 422 - Error - if a Database exception was raised (the body will contain the exception returned by the datase)
         /// </summary>
         /// <returns></returns>
-        [HttpDelete("{id}")]
+        [HttpDelete]
         public async Task<IActionResult> DeletePlace(string id)
         {
             var place = await _context.Place.FindAsync(id);
             if (place == null)  
-                return NotFound();
+                return NotFound(new ResponseBody(HttpStatusCode.NotFound, "A Place does not exist with the supplied Id"));
 
             _context.Place.Remove(place);
 
@@ -127,6 +127,7 @@ namespace UdemyReact.Controllers
 
             return await this.SaveChangesAsync("Error Deleting Place", NoContent());
         }
+
 
         /// <summary>
         /// Tries the SaveChanges asynchronously.
@@ -143,7 +144,7 @@ namespace UdemyReact.Controllers
             }
             catch (DbUpdateException ex)
             {
-                return UnprocessableEntity(new { message = message + " : " + ex.Message + " \n " + ex.InnerException?.Message });
+                return UnprocessableEntity(new ResponseBody(HttpStatusCode.UnprocessableEntity, message + " : " + ex.Message + " \n " + ex.InnerException?.Message));
             }
 
             return successAction;
