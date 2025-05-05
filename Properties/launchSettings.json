@@ -17,7 +17,7 @@
       "applicationUrl": "https://localhost:7084;http://localhost:5200",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        /*"ORACLECONNSTR_OracleDb": "User Id=DDV;Password=capet0wn;Data Source=DDVORA"*/
+        /*"ORACLECONNSTR_OracleDb": "User Id=DDV;Password=******;Data Source=DDVORA"*/
       }
     },
     "IIS Express": {
