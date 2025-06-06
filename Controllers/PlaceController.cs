@@ -77,9 +77,8 @@ namespace UdemyReact.Controllers
 
         /// <summary>
         /// HTTP - PUT (?id= in querystring) 
-        /// Creates one or more Place records. 
-        /// The request body chould consist of an array of Place items, even if only one is being added.
-        /// Returns 204 - NoContent - and the Place object created (completed by Include-ing the Image object)
+        /// Updates a Place record. 
+        /// Returns 400 - BadRequest - if the querystring Id does not match Place.Id in the body
         /// Returns 404 - NotFound - if the PlaceId does not exist
         /// Returns 422 - Error - if a Database exception was raised (the body will contain the exception returned by the datase)
         /// </summary>
@@ -88,7 +87,7 @@ namespace UdemyReact.Controllers
         public async Task<IActionResult> PutPlace(string id, [FromBody] Place newPlace)
         {
             if (id != newPlace.Id)
-                return BadRequest(new ResponseBody(HttpStatusCode.NotFound, "Id does not match the body contents"));
+                return BadRequest(new ResponseBody(HttpStatusCode.BadRequest, "Id does not match the body contents"));
 
             var place = await _context.Place.FindAsync(id);
             if (place == null)

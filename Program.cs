@@ -28,12 +28,20 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
+    options.AddPolicy("AllowAny",
+        builder =>
+        {
+            builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+        });
     options.AddPolicy("AllowGetPut",
         builder =>
         {
             builder
             .AllowAnyOrigin()
-            .AllowAnyMethod()  //   WithMethods("GET", "PUT") 
+            .WithMethods("GET", "PUT") 
             .AllowAnyHeader();
         });
 });
@@ -60,7 +68,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles("/api");
 
-app.UseCors("AllowGetPut");
+app.UseCors("AllowAny");
 app.UseAuthorization();
 
 app.MapControllers();
